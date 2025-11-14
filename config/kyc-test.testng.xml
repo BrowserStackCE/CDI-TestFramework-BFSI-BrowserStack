@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+<suite name="KYC-Test">
+    <test name="FinstackKYC">
+        <classes>
+            <class name="com.browserstack.FinstackKYCTest"/>
+        </classes>
+    </test>
+</suite>
