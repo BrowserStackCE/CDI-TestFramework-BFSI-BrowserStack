@@ -50,7 +50,7 @@ public class FinstackTest extends SeleniumTest {
             System.out.println("DEMO MODE: Clicking 'Enable' to change the UI from 'Sign In' to 'Login'.");
             String enableButtonXPath = "//button[text()='Enable']"; 
             driver.findElement(By.xpath(enableButtonXPath)).click();
-            Thread.sleep(1500); // Wait for the button text to change
+            Thread.sleep(5000); // Wait for the button text to change
         }
         // ====================================================================
 
