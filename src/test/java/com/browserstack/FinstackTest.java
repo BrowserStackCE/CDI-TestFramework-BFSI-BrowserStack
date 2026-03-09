@@ -1,4 +1,16 @@
-@Test
+package com.browserstack;
+
+import com.browserstack.SeleniumTest;
+import org.openqa.selenium.By;
+import org.testng.Assert;
+import org.testng.annotations.Test;
+import com.browserstack.v2.utils.BrowserStack;
+import org.openqa.selenium.JavascriptExecutor;
+import com.browserstack.PercySDK;
+
+public class FinstackTest extends SeleniumTest {
+
+    @Test
     public void loginTest() throws Exception {
         // --- Step 1: Navigate to the login page ---
         System.out.println("Navigating to https://finstack-alpha.vercel.app/");
@@ -31,43 +43,112 @@
         // --- BROWSERSTACK SELF-HEALING DEMO LOGIC ---
         // ====================================================================
         
-        // IMPORTANT: Set this to 'false' for the Baseline run.
-        // Set this to 'true' for the Demo/Healed run.
-        boolean triggerHeal = false; 
+        // This is permanently set to true for this specific demo branch!
+        boolean triggerHeal = true; 
 
         if (triggerHeal) {
             System.out.println("DEMO MODE: Clicking 'Enable' to change the UI from 'Sign In' to 'Login'.");
-            // Verified locator based on your provided HTML
             String enableButtonXPath = "//button[text()='Enable']"; 
             driver.findElement(By.xpath(enableButtonXPath)).click();
-            
-            // Short wait to allow the UI to update the button text from Sign In -> Login
-            Thread.sleep(1500); 
+            Thread.sleep(1500); // Wait for the button text to change
         }
         // ====================================================================
 
         // --- Step 4: Click Sign In Button ---
-        // We ALWAYS use the "Sign In" locator here to force a failure during the demo run,
-        // which gives BrowserStack the opportunity to heal the locator and click "Login".
+        // BrowserStack knows this locator from the master branch runs. 
+        // Here, it will fail (because we clicked Enable), and BrowserStack will heal it!
         String signInButtonXPath = "//button[text()='Sign In']";
         System.out.println("Clicking Sign In button using original locator...");
         driver.findElement(By.xpath(signInButtonXPath)).click();
 
-        // Wait for redirection after login
         Thread.sleep(3000); 
 
         // --- Step 5: Assertion to verify successful login ---
         System.out.println("Verifying successful login via dashboard element...");
-        
-        // Replace this XPath with something that definitely appears after login, 
-        // such as a "Log Out" button, a profile icon, or a Welcome message.
-        String postLoginElementXPath = "//h1[contains(text(), 'Good morning')]"; 
-        
-        // Wait a moment for the page to render the new state
         Thread.sleep(2000); 
         
+        String postLoginElementXPath = "//h1[contains(text(), 'Good morning')]"; 
         boolean isLoginSuccessful = driver.findElement(By.xpath(postLoginElementXPath)).isDisplayed();
         Assert.assertTrue(isLoginSuccessful, "Verification failed: Could not find the dashboard element after login.");
         
         System.out.println("Login verification passed successfully!");
     }
+
+    
+    // The second @Test method for creating a new account (Unchanged from original).
+    @Test
+    public void createNewAccountAndVerifyProfile() throws Exception {
+        System.out.println("Navigating to https://finstack-alpha.vercel.app/");
+        driver.get("https://finstack-alpha.vercel.app/");
+        try {
+            System.out.println("Attempting to maximize browser window...");
+            driver.manage().window().maximize();
+            System.out.println("Browser window maximized successfully.");
+        } 
+        catch (org.openqa.selenium.UnsupportedCommandException e) {
+            System.out.println("Skipping maximize command: Command unsupported by the platform.");
+        }
+       
+        Thread.sleep(2000);
+        BrowserStack.setCustomTag("ID", "TC-1294020");
+        
+        System.out.println("Clicking 'Create account' link.");
+        String createAccountLinkXPath = "//a[text()='Create account']";
+        driver.findElement(By.xpath(createAccountLinkXPath)).click();
+        Thread.sleep(2000);
+
+        System.out.println("Filling out the registration form.");
+        driver.findElement(By.xpath("//input[@id='firstName']")).sendKeys("John");
+        driver.findElement(By.xpath("//input[@id='lastName']")).sendKeys("Smith");
+        String randomEmail = "john.smith+" + System.currentTimeMillis() + "@example.com";
+        System.out.println("Using email: " + randomEmail);
+        driver.findElement(By.xpath("//input[@id='email']")).sendKeys(randomEmail);
+        driver.findElement(By.xpath("//input[@id='password']")).sendKeys("SamplePass123!");
+        driver.findElement(By.xpath("//input[@id='confirmPassword']")).sendKeys("SamplePass123!");
+
+        System.out.println("Clicking 'I agree to terms' checkbox.");
+        driver.findElement(By.xpath("//button[@id='agreeToTerms']")).click();
+        Thread.sleep(1000);
+
+        System.out.println("Clicking 'Create Account' button.");
+        driver.findElement(By.xpath("//button[text()='Create Account']")).click();
+        Thread.sleep(10000);
+
+        System.out.println("Clicking 'Collapse' button.");
+        String in_collapseButtonXPath = "//button[text()='Collapse']";
+        driver.findElement(By.xpath(in_collapseButtonXPath)).click();
+        Thread.sleep(1000);
+
+        System.out.println("Clicking 'Capture Image' button.");
+        driver.findElement(By.xpath("//button[normalize-space()='Capture Image']")).click();
+        Thread.sleep(2000);
+
+        System.out.println("Clicking 'Complete Verification' button.");
+        driver.findElement(By.xpath("//button[normalize-space()='Complete Verification']")).click();
+
+        System.out.println("Clicking 'Expand' button.");
+        driver.findElement(By.xpath("/html/body/div/div[1]/div[1]/div[2]/button")).click();
+        Thread.sleep(1000);
+
+        String currentUrl = driver.getCurrentUrl();
+        Assert.assertFalse(currentUrl.contains("signup"), "Verification failed: User is still on the signup page.");
+        System.out.println("Account creation successful. Current URL: " + currentUrl);
+
+        System.out.println("Clicking 'Collapse' button.");
+        String collapseButtonXPath = "//button[text()='Collapse']";
+        driver.findElement(By.xpath(collapseButtonXPath)).click();
+        Thread.sleep(1000);
+
+        System.out.println("Scrolling to the top of the page.");
+        JavascriptExecutor js = (JavascriptExecutor) driver;
+        js.executeScript("window.scrollTo(0, 0);");
+        Thread.sleep(1000); 
+        PercySDK.screenshot(driver, "Dashboard Top");
+        
+        System.out.println("Verifying 'Good morning, John' is displayed on the page.");
+        String goodMorningTextXPath = "//h1[normalize-space(.)='Good morning, John']";
+        Assert.assertTrue(driver.findElement(By.xpath(goodMorningTextXPath)).isDisplayed(), 
+          "Verification failed: 'Good morning, John' text is not displayed on the page.");
+        System.out.println("Successfully verified 'Good morning, John'. Test completed.");
+    }
+}
